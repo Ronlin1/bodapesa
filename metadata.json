@@ -1,0 +1,8 @@
+{
+  "name": "BodaPesa",
+  "description": "AI-driven Alternative Credit Scorer and Micro-Investment Bot for informal workers in East Africa, featuring trust scoring, savings nudges, and earnings optimization.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ]
+}
