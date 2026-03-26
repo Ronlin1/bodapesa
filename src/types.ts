@@ -76,6 +76,10 @@ export const TRANSLATIONS = {
     connect: 'Connect',
     downloadReport: 'Download Credit Report',
     logEarnings: 'Log Daily Earnings',
+    upcomingTitle: 'Coming Soon!',
+    upcomingDesc: 'Our engineers are working hard to bring this feature to your fingertips. Stay tuned!',
+    loginRequired: 'Please login to access this feature',
+    backToDashboard: 'Back to Dashboard',
   },
   sw: {
     dashboard: 'Dashibodi',
@@ -97,6 +101,10 @@ export const TRANSLATIONS = {
     connect: 'Unganisha',
     downloadReport: 'Pakua Ripoti ya Mkopo',
     logEarnings: 'Rekodi Mapato ya Kila Siku',
+    upcomingTitle: 'Inakuja Hivi Karibuni!',
+    upcomingDesc: 'Wahandisi wetu wanafanya kazi kwa bidii kuleta kipengele hiki kiganjani mwako. Endelea kufuatilia!',
+    loginRequired: 'Tafadhali ingia ili kufikia kipengele hiki',
+    backToDashboard: 'Rudi kwenye Dashibodi',
   },
   lg: {
     dashboard: 'Dashboard',
@@ -118,5 +126,9 @@ export const TRANSLATIONS = {
     connect: 'Yungako',
     downloadReport: 'Ggyako Ripoti y\'Obwesigwa',
     logEarnings: 'Wandiika Enfuna yo eya Bulijjo',
+    upcomingTitle: 'Kijja mangu!',
+    upcomingDesc: 'Bainjiniya baffe bakola nnyo okuleeta enkyukakyuka eno mu ngalo zo. Linda mangu!',
+    loginRequired: 'Yingira okukozesa enkyukakyuka eno',
+    backToDashboard: 'Dda ku Dashboard',
   }
 };

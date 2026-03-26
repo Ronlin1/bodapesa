@@ -11,7 +11,9 @@ import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { TransactionHistory } from './components/TransactionHistory';
 import { ChatBot } from './components/ChatBot';
 import { LoanConnect } from './components/LoanConnect';
-import { LogIn, LogOut, Plus, Wallet, TrendingUp, MapPin, Download, Bike, DollarSign } from 'lucide-react';
+import { UpcomingFeature } from './components/UpcomingFeature';
+import { BodaRiderAnimation } from './components/BodaRiderAnimation';
+import { LogIn, LogOut, Plus, Wallet, TrendingUp, MapPin, Download, Bike, DollarSign, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const MOCK_TRANSACTIONS: Transaction[] = [
@@ -32,8 +34,19 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isLoggingEarnings, setIsLoggingEarnings] = useState(false);
   const [logAmount, setLogAmount] = useState('');
+  const [showIntro, setShowIntro] = useState(true);
+  const [showUpcoming, setShowUpcoming] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   const t = TRANSLATIONS[language];
+
+  const requireAuth = (action: () => void) => {
+    if (!user) {
+      setShowAuthPrompt(true);
+      return;
+    }
+    action();
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -77,46 +90,52 @@ export default function App() {
   }, [transactions, language]);
 
   const handleAddTransaction = async () => {
-    if (!user) return;
-    const newTx = {
-      amount: Math.floor(Math.random() * 10000) + 1000,
-      type: Math.random() > 0.3 ? 'income' : 'expense',
-      category: 'Transport',
-      timestamp: Date.now(),
-      description: 'New Ride Payment'
-    };
-    await addDoc(collection(db, `users/${user.uid}/transactions`), newTx);
+    requireAuth(async () => {
+      const newTx = {
+        amount: Math.floor(Math.random() * 10000) + 1000,
+        type: Math.random() > 0.3 ? 'income' : 'expense',
+        category: 'Transport',
+        timestamp: Date.now(),
+        description: 'New Ride Payment'
+      };
+      await addDoc(collection(db, `users/${user!.uid}/transactions`), newTx);
+    });
   };
 
   const handleLogEarnings = async () => {
-    if (!user || !logAmount) return;
-    const newTx = {
-      amount: parseInt(logAmount),
-      type: 'income',
-      category: 'Transport',
-      timestamp: Date.now(),
-      description: 'Daily Earnings Log'
-    };
-    await addDoc(collection(db, `users/${user.uid}/transactions`), newTx);
-    setLogAmount('');
-    setIsLoggingEarnings(false);
+    requireAuth(async () => {
+      if (!logAmount) return;
+      const newTx = {
+        amount: parseInt(logAmount),
+        type: 'income',
+        category: 'Transport',
+        timestamp: Date.now(),
+        description: 'Daily Earnings Log'
+      };
+      await addDoc(collection(db, `users/${user!.uid}/transactions`), newTx);
+      setLogAmount('');
+      setIsLoggingEarnings(false);
+    });
   };
 
   const handleSave = async (amount: number) => {
-    if (!user) return;
-    const saveTx = {
-      amount,
-      type: 'expense',
-      category: 'Savings',
-      timestamp: Date.now(),
-      description: 'AI Suggested Saving'
-    };
-    await addDoc(collection(db, `users/${user.uid}/transactions`), saveTx);
-    setNudge(null);
+    requireAuth(async () => {
+      const saveTx = {
+        amount,
+        type: 'expense',
+        category: 'Savings',
+        timestamp: Date.now(),
+        description: 'AI Suggested Saving'
+      };
+      await addDoc(collection(db, `users/${user!.uid}/transactions`), saveTx);
+      setNudge(null);
+    });
   };
 
   const handleDownloadReport = () => {
-    alert("Generating your official BodaPesa Credit Report... This will be sent to your email.");
+    requireAuth(() => {
+      setShowUpcoming(true);
+    });
   };
 
   if (loading) {
@@ -132,7 +151,65 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20 overflow-x-hidden">
+      {/* Intro Animation */}
+      <AnimatePresence>
+        {showIntro && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-yellow-400 z-[300] flex flex-col items-center justify-center"
+          >
+            <BodaRiderAnimation 
+              once 
+              className="w-full" 
+              onComplete={() => setShowIntro(false)} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Upcoming Feature View */}
+      <AnimatePresence>
+        {showUpcoming && (
+          <UpcomingFeature language={language} onBack={() => setShowUpcoming(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Auth Prompt Modal */}
+      <AnimatePresence>
+        {showAuthPrompt && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[250] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white p-8 rounded-[40px] w-full max-w-md border-4 border-black shadow-2xl text-center"
+            >
+              <div className="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldAlert size={32} />
+              </div>
+              <h2 className="text-2xl font-black uppercase mb-4">{t.loginRequired}</h2>
+              <button 
+                onClick={() => {
+                  signIn();
+                  setShowAuthPrompt(false);
+                }}
+                className="w-full bg-yellow-400 text-black py-4 rounded-2xl font-black uppercase mb-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+              >
+                {t.login}
+              </button>
+              <button 
+                onClick={() => setShowAuthPrompt(false)}
+                className="text-sm font-bold opacity-50 uppercase"
+              >
+                Maybe Later
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <header className="bg-black text-yellow-400 p-6 sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
@@ -200,7 +277,7 @@ export default function App() {
             </div>
             <div className="space-y-3">
               <button 
-                onClick={() => setIsLoggingEarnings(true)}
+                onClick={() => requireAuth(() => setIsLoggingEarnings(true))}
                 className="w-full bg-yellow-400 text-black py-4 rounded-2xl font-black uppercase flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
               >
                 <DollarSign size={20} /> {t.logEarnings}
@@ -276,9 +353,9 @@ export default function App() {
       {/* Mobile Bottom Nav */}
       <nav className="lg:hidden fixed bottom-6 left-6 right-6 bg-black text-yellow-400 p-4 rounded-3xl shadow-2xl flex justify-around items-center border border-yellow-400/20">
         <button className="p-2 bg-yellow-400 text-black rounded-xl"><Wallet size={24} /></button>
-        <button className="p-2 opacity-50"><TrendingUp size={24} /></button>
-        <button className="p-2 opacity-50"><MapPin size={24} /></button>
-        <button className="p-2 opacity-50" onClick={() => setIsLoggingEarnings(true)}><Plus size={24} /></button>
+        <button className="p-2 opacity-50" onClick={() => setShowUpcoming(true)}><TrendingUp size={24} /></button>
+        <button className="p-2 opacity-50" onClick={() => setShowUpcoming(true)}><MapPin size={24} /></button>
+        <button className="p-2 opacity-50" onClick={() => requireAuth(() => setIsLoggingEarnings(true))}><Plus size={24} /></button>
       </nav>
     </div>
   );
